@@ -104,13 +104,16 @@ call plug#begin()
 Plug 'preservim/nerdtree'
 
 " Commenting code.
-Plug 'preservim/nerdcommenter'
+Plug 'tpope/vim-commentary'
 
 " Linter and auto-formatter.
 Plug 'dense-analysis/ale'
 
 " Git commands in vim.
 Plug 'tpope/vim-fugitive'
+
+" For adding closing counterparts.
+Plug 'tpope/vim-surround'
 
 " Checking git diff.
 if has('patch-8.0.902')
@@ -147,9 +150,22 @@ nnoremap <silent>]d :SignifyHunkDiff<CR>
 nnoremap <silent>]u :SignifyHunkUndo<CR>
 
 " Good for entering stage commit.
-nnoremap <silent>]g :tab Git<CR>
+nnoremap <silent><S-G> :tab Git<CR>
 
-map <silent>[g :call setbufvar(winbufnr(popup_atcursor(systemlist("cd " . shellescape(fnamemodify(resolve(expand('%:p')), ":h")) . " && git log --no-merges -n 1 -L " . shellescape(line("v") . "," . line(".") . ":" . resolve(expand("%:p")))), { "padding": [1,1,1,1], "pos": "botleft", "wrap": 0 })), "&filetype", "git")<CR>
+" Add a git blame on selected line.
+noremap <silent><S-C> :call setbufvar(winbufnr(popup_atcursor(systemlist("cd " . shellescape(fnamemodify(resolve(expand('%:p')), ":h")) . " && git log --no-merges -n 1 -L " . shellescape(line("v") . "," . line(".") . ":" . resolve(expand("%:p")))), { "padding": [1,1,1,1], "pos": "botleft", "wrap": 0 })), "&filetype", "git")<CR>
+
+" Add surround command shortcut.
+vnoremap s <Plug>VSurround
+
+" Toggle comments.
+nnoremap <silent><C-_> <Plug>CommentaryLine
+vnoremap <silent><C-_> <Plug>Commentary
+
+" Go to definitions and references.
+nnoremap <silent><F3> :ALEGoToDefinition -tab<CR>
+nnoremap <silent><S-F3> :ALEFindReferences -split<CR>
+nnoremap <silent><S-D> :ALEHover<CR>
 
 " }}}
 
@@ -171,11 +187,11 @@ function! GetMode()
   endif
 endfunction
 
-" This will enable code folding.
+" This will enable code folding for vim files.
 " Use the marker method of folding.
 augroup filetype_vim
-    autocmd!
-    autocmd FileType vim setlocal foldmethod=marker
+  autocmd!
+  autocmd FileType vim setlocal foldmethod=marker
 augroup END
 
 " More Vimscripts code goes here.
@@ -183,21 +199,37 @@ augroup END
 " If Vim version is equal to or greater than 7.3 enable undofile.
 " This allows you to undo changes to a file even after saving it.
 if version >= 703
-    set undodir=~/.vim/backup
-    set undofile
-    set undoreload=10000
+  set undodir=~/.vim/backup
+  set undofile
+  set undoreload=10000
 endif
+
+" Start NERDTree when Vim is started without file arguments.
+autocmd StdinReadPre * let s:std_in=1
+autocmd VimEnter * if argc() == 0 && !exists('s:std_in') | NERDTree | endif
 
 " Open the existing NERDTree on each new tab.
 autocmd BufWinEnter * if &buftype != 'quickfix' && getcmdwintype() == '' | silent NERDTreeMirror | endif
+
+" Close the tab if NERDTree is the only window remaining in it.
+autocmd BufEnter * if winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | call feedkeys(":quit\<CR>:\<BS>") | endif
+
+" Exit Vim if NERDTree is the only window remaining in the only tab.
+autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | call feedkeys(":quit\<CR>:\<BS>") | endif
+
 let NERDTreeShowHidden=1
 let NERDTreeIgnore=['\.git$', '\.jpg$', '\.mp4$', '\.ogg$', '\.iso$', '\.pdf$', '\.pyc$', '\.odt$', '\.png$', '\.gif$', '\.db$']
+let g:NERDTreeQuitOnOpen = 1
 
 " Enable completion where available.
 let g:ale_completion_enabled = 1
 let g:ale_fixers = {
 \   '*': ['remove_trailing_lines', 'trim_whitespace'],
 \}
+
+let g:ale_floating_preview = 1
+let g:ale_set_quickfix = 1
+let g:ale_lint_on_text_changed = 'never'
 
 highlight SignColumn        ctermbg=234 ctermfg=White
 highlight SignifySignAdd    ctermfg=green  cterm=NONE
@@ -225,7 +257,7 @@ set laststatus=2
 
 set statusline=
 set statusline+=%#EditStatusLine#\ %{GetMode()}\  " Show vim edit mode
-set statusline+=%#FileStatusLine#\ %f:%l-%c\  " Full path to file with current line and column number
+set statusline+=%#FileStatusLine#\ %t:%l-%c\  " Full path to file with current line and column number
 set statusline+=%m " Modified flag ([+])
 set statusline+=%r " Read-only flag (RO)
 set statusline+=%= " Aligns the following items to the right
