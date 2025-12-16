@@ -164,8 +164,9 @@ vnoremap <silent><C-_> <Plug>Commentary
 
 " Go to definitions and references.
 nnoremap <silent><F3> :ALEGoToDefinition -tab<CR>
-nnoremap <silent><S-F3> :ALEFindReferences -split<CR>
+nnoremap <silent><S-F3> :ALEFindReferences -split -relative<CR>
 nnoremap <silent><S-D> :ALEHover<CR>
+nnoremap <silent><S-F> :ALEFix<CR>
 
 " }}}
 
@@ -218,6 +219,7 @@ autocmd BufEnter * if winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTa
 autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | call feedkeys(":quit\<CR>:\<BS>") | endif
 
 let NERDTreeShowHidden=1
+let NERDTreeMinimalUI  = 1
 let NERDTreeIgnore=['\.git$', '\.jpg$', '\.mp4$', '\.ogg$', '\.iso$', '\.pdf$', '\.pyc$', '\.odt$', '\.png$', '\.gif$', '\.db$']
 let g:NERDTreeQuitOnOpen = 1
 
@@ -229,7 +231,9 @@ let g:ale_fixers = {
 
 let g:ale_floating_preview = 1
 let g:ale_set_quickfix = 1
-let g:ale_lint_on_text_changed = 'never'
+let g:ale_lint_on_text_changed = 1
+let g:ale_lint_delay = 1000
+let g:ale_fix_on_save = 0
 
 highlight SignColumn        ctermbg=234 ctermfg=White
 highlight SignifySignAdd    ctermfg=green  cterm=NONE
