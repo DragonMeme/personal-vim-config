@@ -37,7 +37,6 @@ set list listchars=eol:↵,tab:»\ ,trail:•,nbsp:⎵
 
 " Add numbers to each line on the left-hand side.
 set number
-set relativenumber
 
 " Allow seeing some lines below before cursor reaches end.
 set scrolloff=5
@@ -82,6 +81,9 @@ set wildmode=list:longest
 " Wildmenu will ignore files with these extensions.
 set wildignore=*.docx,*.jpg,*.jpeg,*.png,*.gif,*.pdf,*.pyc,*.exe,*.flv,*.img,*.xlsx,*.mp3,*.mp4,*.out
 
+" Faster sign updates on CursorHold/CursorHoldI
+set updatetime=100
+
 " Color column to indicate line overflow.
 set colorcolumn=120
 highlight ColorColumn ctermbg=darkred guibg=darkred
@@ -122,6 +124,10 @@ else
   Plug 'mhinz/vim-signify', { 'tag': 'legacy' }
 endif
 
+" Installs the fuzzy file finder.
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+Plug 'junegunn/fzf.vim'
+
 call plug#end()
 
 " }}}
@@ -137,10 +143,16 @@ let mapleader = " "
 noremap <silent><C-s> :w<CR>
 noremap <silent><Tab><Right> :tabn<CR>
 noremap <silent><Tab><Left> :tabp<CR>
-noremap <Tab><N> :tabnew<CR>
+noremap <silent><Tab><N> :tabnew<CR>
 
 " NERDTree mappings go here.
 nnoremap <silent><F2> :NERDTreeToggle<CR>
+nnoremap <silent><C-F2> :NERDTreeFind<CR>
+
+" Fzf mappings go here.
+nnoremap <silent>,f :Files!<CR>
+nnoremap <silent>,g :GFiles!<CR>
+nnoremap <silent>,l :Lines!<CR>
 
 " Faster sign updates on CursorHold/CursorHoldI
 set updatetime=100
@@ -150,10 +162,10 @@ nnoremap <silent>]d :SignifyHunkDiff<CR>
 nnoremap <silent>]u :SignifyHunkUndo<CR>
 
 " Good for entering stage commit.
-nnoremap <silent><S-G> :tab Git<CR>
+nnoremap <silent><Leader>g :tab Git<CR>
 
 " Add a git blame on selected line.
-noremap <silent><S-C> :call setbufvar(winbufnr(popup_atcursor(systemlist("cd " . shellescape(fnamemodify(resolve(expand('%:p')), ":h")) . " && git log --no-merges -n 1 -L " . shellescape(line("v") . "," . line(".") . ":" . resolve(expand("%:p")))), { "padding": [1,1,1,1], "pos": "botleft", "wrap": 0 })), "&filetype", "git")<CR>
+nnoremap <silent><Leader>b :call setbufvar(winbufnr(popup_atcursor(systemlist("cd " . shellescape(fnamemodify(resolve(expand('%:p')), ":h")) . " && git log --no-merges -n 1 -L " . shellescape(line("v") . "," . line(".") . ":" . resolve(expand("%:p")))), { "padding": [1,1,1,1], "pos": "botleft", "wrap": 0 })), "&filetype", "git")<CR>
 
 " Add surround command shortcut.
 vnoremap s <Plug>VSurround
@@ -165,8 +177,24 @@ vnoremap <silent><C-_> <Plug>Commentary
 " Go to definitions and references.
 nnoremap <silent><F3> :ALEGoToDefinition -tab<CR>
 nnoremap <silent><S-F3> :ALEFindReferences -split -relative<CR>
-nnoremap <silent><S-D> :ALEHover<CR>
-nnoremap <silent><S-F> :ALEFix<CR>
+nnoremap <silent><Leader>d :ALEHover<CR>
+nnoremap <silent><Leader>f :ALEFix<CR>
+
+" Simple autocomplete inserts.
+vnoremap <Tab> >gv
+vnoremap <S-Tab> <gv
+inoremap <> <><Left>
+inoremap ( ()<Left>
+inoremap [ []<Left>
+inoremap { {}<Left>
+inoremap () ()
+inoremap [] []
+inoremap {} {}
+inoremap (<CR> (<CR><CR>)<Up>
+inoremap [<CR> [<CR><CR>]<Up>
+inoremap {<CR> {<CR><CR>}<Up>
+inoremap "" ""<Left>
+inoremap '' ''<Left>
 
 " }}}
 
@@ -188,13 +216,6 @@ function! GetMode()
   endif
 endfunction
 
-" This will enable code folding for vim files.
-" Use the marker method of folding.
-augroup filetype_vim
-  autocmd!
-  autocmd FileType vim setlocal foldmethod=marker
-augroup END
-
 " More Vimscripts code goes here.
 
 " If Vim version is equal to or greater than 7.3 enable undofile.
@@ -209,19 +230,17 @@ endif
 autocmd StdinReadPre * let s:std_in=1
 autocmd VimEnter * if argc() == 0 && !exists('s:std_in') | NERDTree | endif
 
-" Open the existing NERDTree on each new tab.
-autocmd BufWinEnter * if &buftype != 'quickfix' && getcmdwintype() == '' | silent NERDTreeMirror | endif
-
 " Close the tab if NERDTree is the only window remaining in it.
 autocmd BufEnter * if winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | call feedkeys(":quit\<CR>:\<BS>") | endif
 
 " Exit Vim if NERDTree is the only window remaining in the only tab.
 autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | call feedkeys(":quit\<CR>:\<BS>") | endif
 
-let NERDTreeShowHidden=1
-let NERDTreeMinimalUI  = 1
-let NERDTreeIgnore=['\.git$', '\.jpg$', '\.mp4$', '\.ogg$', '\.iso$', '\.pdf$', '\.pyc$', '\.odt$', '\.png$', '\.gif$', '\.db$']
+let NERDTreeShowHidden = 1
+let NERDTreeMinimalUI = 1
+let NERDTreeIgnore = ['\.git$', '\.jpg$', '\.mp4$', '\.ogg$', '\.iso$', '\.pdf$', '\.pyc$', '\.odt$', '\.png$', '\.gif$', '\.db$']
 let g:NERDTreeQuitOnOpen = 1
+let g:NERDTreeStatusline = '%#NonText#'
 
 " Enable completion where available.
 let g:ale_completion_enabled = 1
@@ -234,6 +253,23 @@ let g:ale_set_quickfix = 1
 let g:ale_lint_on_text_changed = 1
 let g:ale_lint_delay = 1000
 let g:ale_fix_on_save = 0
+
+" Preview on the right with 50% width, toggle with CTRL-/
+let g:fzf_preview_window = ['hidden,right:50%', 'ctrl-/']
+
+" Define a custom action for opening in the current window
+function! OpenInCurrentWindow(file)
+  execute 'edit' a:file
+endfunction
+
+" This is the default extra key bindings
+let g:fzf_action = {
+  \ 'enter': 'tab split',
+  \ 'ctrl-x': 'split',
+  \ 'ctrl-v': 'vsplit' }
+
+" Map a key (Ctrl-o) to the custom action
+let g:fzf_action['ctrl-o'] = function('OpenInCurrentWindow')
 
 highlight SignColumn        ctermbg=234 ctermfg=White
 highlight SignifySignAdd    ctermfg=green  cterm=NONE
