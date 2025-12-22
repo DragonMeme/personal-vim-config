@@ -128,6 +128,8 @@ endif
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 
+Plug 'Eliot00/git-lens.vim'
+
 call plug#end()
 
 " }}}
@@ -277,6 +279,13 @@ highlight SignifySignDelete ctermfg=red    cterm=NONE
 highlight SignifySignChange ctermfg=yellow cterm=NONE
 highlight Pmenu             ctermbg=236 ctermfg=white
 highlight PmenuSbar         ctermbg=grey
+
+let g:GIT_LENS_ENABLED = 1
+let g:GIT_LENS_CONFIG = {
+  \ 'blame_prefix': ' -> ',
+  \ 'blame_wrap': 0,
+  \ 'blame_empty_line': 0,
+  \ 'blame_delay': 500 }
 
 " }}}
 
