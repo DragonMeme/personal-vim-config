@@ -192,6 +192,12 @@ inoremap { {}<Left>
 inoremap () ()
 inoremap [] []
 inoremap {} {}
+inoremap (<Left> (<Left>
+inoremap [<Left> [<Left>
+inoremap {<Left> {<Left>
+inoremap (<Right> (<Right>
+inoremap [<Right> [<Right>
+inoremap {<Right> {<Right>
 inoremap (<CR> (<CR><CR>)<Up>
 inoremap [<CR> [<CR><CR>]<Up>
 inoremap {<CR> {<CR><CR>}<Up>
