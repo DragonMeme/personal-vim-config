@@ -33,7 +33,8 @@ syntax on
 set noswapfile
 
 " Add markers to indicate tabs vs spaces.
-set list listchars=eol:↵,tab:»\ ,trail:•,nbsp:⎵
+set list listchars=tab:»\ ,trail:•,nbsp:⎵
+hi SpecialKey ctermfg=239
 
 " Add numbers to each line on the left-hand side.
 set number
